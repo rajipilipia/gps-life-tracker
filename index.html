@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="GPS Life Tracker">
+    
+    <title>GPS Life Tracker</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>📍 GPS Life Tracker</h1>
+                <div class="status-indicator">
+                    <span id="status-text">Ready</span>
+                    <span id="status-dot" class="status-dot"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="tracking">🎯 Track</button>
+                <button class="tab-btn" data-tab="map">🗺️ Map</button>
+                <button class="tab-btn" data-tab="timeline">📅 Timeline</button>
+                <button class="tab-btn" data-tab="stats">📊 Stats</button>
+                <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+            </nav>
+
+            <!-- Tracking Tab -->
+            <div id="tracking-tab" class="tab-content active">
+                <div class="tracking-panel">
+                    <div class="location-display">
+                        <div class="location-card">
+                            <h3>Current Location</h3>
+                            <div class="location-data">
+                                <p><strong>Latitude:</strong> <span id="current-lat">--</span></p>
+                                <p><strong>Longitude:</strong> <span id="current-lng">--</span></p>
+                                <p><strong>Accuracy:</strong> <span id="current-accuracy">--</span> meters</p>
+                                <p><strong>Speed:</strong> <span id="current-speed">--</span> km/h</p>
+                                <p><strong>Timestamp:</strong> <span id="current-time">--</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tracking-controls">
+                        <button id="start-tracking" class="btn btn-primary">
+                            <span class="btn-icon">▶️</span>
+                            Start Tracking
+                        </button>
+                        <button id="stop-tracking" class="btn btn-secondary" disabled>
+                            <span class="btn-icon">⏹️</span>
+                            Stop Tracking
+                        </button>
+                        <button id="export-data" class="btn btn-outline">
+                            <span class="btn-icon">📥</span>
+                            Export Data
+                        </button>
+                    </div>
+
+                    <div class="session-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">Duration</span>
+                                <span id="session-duration" class="value">00:00:00</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Points</span>
+                                <span id="points-count" class="value">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Distance</span>
+                                <span id="total-distance" class="value">0.0 km</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Avg Speed</span>
+                                <span id="avg-speed" class="value">0 km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Tab -->
+            <div id="map-tab" class="tab-content">
+                <div class="map-container">
+                    <div id="map" class="map"></div>
+                    <div class="map-controls">
+                        <button id="center-map" class="map-btn">📍 Center</button>
+                        <button id="toggle-route" class="map-btn">🛣️ Route</button>
+                        <button id="toggle-heatmap" class="map-btn">🔥 Heat</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div id="timeline-tab" class="tab-content">
+                <div class="timeline-container">
+                    <div class="date-picker">
+                        <input type="date" id="timeline-date" class="date-input">
+                        <button id="today-btn" class="btn btn-small">Today</button>
+                    </div>
+                    <div id="timeline-content" class="timeline-content">
+                        <div class="empty-state">
+                            <p>📍 No location data for this date</p>
+                            <p>Start tracking to see your daily timeline!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="stats-tab" class="tab-content">
+                <div class="stats-container">
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <h3>Total Distance</h3>
+                            <div class="stat-value" id="total-distance-stat">0 km</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Tracking Days</h3>
+                            <div class="stat-value" id="tracking-days-stat">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Time</h3>
+                            <div class="stat-value" id="total-time-stat">0h 0m</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Top Speed</h3>
+                            <div class="stat-value" id="top-speed-stat">0 km/h</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h3>Weekly Activity</h3>
+                        <div id="weekly-chart" class="chart-container">
+                            <canvas id="activity-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="places-section">
+                        <h3>Frequently Visited Places</h3>
+                        <div id="places-list" class="places-list">
+                            <div class="empty-state">
+                                <p>🏠 No places detected yet</p>
+                                <p>Continue tracking to discover your favorite spots!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>Tracking Settings</h3>
+                        <div class="setting-item">
+                            <label for="update-interval">Update Interval</label>
+                            <select id="update-interval" class="setting-select">
+                                <option value="5">5 seconds</option>
+                                <option value="10" selected>10 seconds</option>
+                                <option value="30">30 seconds</option>
+                                <option value="60">1 minute</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="high-accuracy">High Accuracy GPS</label>
+                            <input type="checkbox" id="high-accuracy" class="setting-checkbox" checked>
+                        </div>
+                        <div class="setting-item">
+                            <label for="background-tracking">Background Tracking</label>
+                            <input type="checkbox" id="background-tracking" class="setting-checkbox" checked>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Privacy & Data</h3>
+                        <div class="setting-item">
+                            <label for="auto-sync">Auto Sync to Cloud</label>
+                            <input type="checkbox" id="auto-sync" class="setting-checkbox">
+                        </div>
+                        <div class="setting-item">
+                            <label for="data-retention">Data Retention</label>
+                            <select id="data-retention" class="setting-select">
+                                <option value="30">30 days</option>
+                                <option value="90">90 days</option>
+                                <option value="365" selected>1 year</option>
+                                <option value="0">Forever</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Storage</h3>
+                        <div class="storage-info">
+                            <p>Used: <span id="storage-used">0 MB</span></p>
+                            <p>Total Points: <span id="total-points">0</span></p>
+                            <button id="clear-data" class="btn btn-danger">
+                                🗑️ Clear All Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>About</h3>
+                        <p>GPS Life Tracker v1.0</p>
+                        <p>Built with ❤️ by Claude Code</p>
+                        <p><a href="#" id="privacy-policy">Privacy Policy</a></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading GPS Life Tracker...</p>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/data-storage.js"></script>
+    <script src="js/gps-tracker.js"></script>
+    <script src="js/map-view.js"></script>
+    <script src="js/timeline-view.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
